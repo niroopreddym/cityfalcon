@@ -1,0 +1,38 @@
+version: "3"
+services:
+  db:
+    image: postgres
+    environment:
+      POSTGRES_USER: "postgres"
+      POSTGRES_PASSWORD: "postgres"
+    volumes:
+      - db-data:/var/lib/postgresql/data
+      - ./migrations/:/docker-entrypoint-initdb.d/
+    ports:
+      - "5432:5432"
+  redis:
+    image: redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - cache:/data
+  rabbitMQ:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+  prometheus:
+    image: niroop/prom
+    build: 
+      context: ./prometheus
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+volumes:
+  db-data:
+    driver: local
+  cache:
+    driver: local
+
+    
