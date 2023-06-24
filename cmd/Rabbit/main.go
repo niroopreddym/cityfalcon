@@ -20,7 +20,6 @@ func main() {
 	if err != nil {
 		fmt.Println(err)
 	}
-	rabbitConnection.PublishMessage([]byte("Hello World"))
 
 	stopChan := make(chan bool)
 	errorChan := make(chan error)
@@ -32,7 +31,6 @@ func main() {
 	select {
 	case err := <-errorChan:
 		fmt.Println(err)
-		return
 	case <-c:
 		fmt.Println("cancel operation")
 		stopChan <- true

@@ -1,15 +1,22 @@
 package rabbitmq
 
 import (
+	"encoding/json"
+	"errors"
 	"fmt"
+	"time"
 
+	"github.com/niroopreddym/cityfalcon/pkg/models"
+	"github.com/niroopreddym/cityfalcon/pkg/services"
 	"github.com/streadway/amqp"
 )
 
 type RabbitEvents struct {
-	Connection *amqp.Connection
-	Channel    *amqp.Channel
-	Queue      *amqp.Queue
+	Connection      *amqp.Connection
+	Channel         *amqp.Channel
+	Queue           *amqp.Queue
+	DatabaseService services.ISQLService
+	RedisService    *services.RedisService
 }
 
 func NewConnection() (*RabbitEvents, error) {
@@ -33,9 +40,11 @@ func NewConnection() (*RabbitEvents, error) {
 	}
 
 	return &RabbitEvents{
-		Connection: connection,
-		Channel:    ch,
-		Queue:      queue,
+		Connection:      connection,
+		Channel:         ch,
+		Queue:           queue,
+		DatabaseService: services.NewDatabaseServicesInstance(),
+		RedisService:    services.NewRedisService(),
 	}, nil
 }
 
@@ -104,7 +113,24 @@ func (r *RabbitEvents) ConsumeMessage(stopChan chan bool, errorChan chan error) 
 	// print consumed messages from queue
 	go func() {
 		for msg := range msgs {
-			fmt.Printf("Received Message: %s\n", msg.Body)
+			getAccDetailsModal := models.GetAccountDetails{}
+			err := json.Unmarshal(msg.Body, &getAccDetailsModal)
+			if err != nil {
+				errorChan <- err
+			}
+
+			accDetails, err := r.DatabaseService.GetAccountDetails(getAccDetailsModal.XCorrelationID)
+			time.Sleep(10 * time.Second)
+
+			if err != nil {
+				r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, err.Error())
+				errorChan <- errors.New("Error occured while fetching the bank details")
+			}
+
+			err = r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, fmt.Sprintf("%v", accDetails.Balance))
+			if err != nil {
+				errorChan <- errors.New("Error occured while fetching the bank details")
+			}
 		}
 	}()
 

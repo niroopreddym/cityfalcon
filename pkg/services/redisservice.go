@@ -25,7 +25,7 @@ func NewRedisService() *RedisService {
 	}
 }
 
-func (r *RedisService) AddKey(key string, value float64) error {
+func (r *RedisService) AddKey(key string, value string) error {
 	_, err := r.Client.Set(r.Context, key, value, 60*time.Minute).Result()
 	if err != nil {
 		return err

@@ -5,7 +5,6 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/niroopreddym/cityfalcon/pkg/models"
@@ -60,7 +59,6 @@ func (handler *BankAndAccountHandler) CreateAccount(w http.ResponseWriter, r *ht
 func (handler *BankAndAccountHandler) GetAccountDetails(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	accountID := params["uuid"]
-	time.Sleep(5 * time.Second)
 
 	getAccDetailsRabbitPayload := models.GetAccountDetails{
 		XCorrelationID: accountID,
