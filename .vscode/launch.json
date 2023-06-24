@@ -17,5 +17,13 @@
             "request": "launch",
             "mode": "debug",
             "program": "C:/Users/niroo/go/src/github.com/niroopreddym/cityfalcon/cmd/main.go"
-        }    ]
+        },
+        {
+            "name": "RMQ",
+            "type": "go",
+            "request": "launch",
+            "mode": "debug",
+            "program": "C:/Users/niroo/go/src/github.com/niroopreddym/cityfalcon/cmd/Rabbit/main.go"
+        }
+      ]
 }

@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
+	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/niroopreddym/cityfalcon/pkg/models"
@@ -59,16 +60,48 @@ func (handler *BankAndAccountHandler) CreateAccount(w http.ResponseWriter, r *ht
 func (handler *BankAndAccountHandler) GetAccountDetails(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
 	accountID := params["uuid"]
+	time.Sleep(5 * time.Second)
 
-	// time.Sleep(5 * time.Second)
-	accDetails, err := handler.DatabaseService.GetAccountDetails(accountID)
-	// if accDetails.a == nil {
-	// 	responseController(w, http.StatusNotFound, "Account Not Found")
+	getAccDetailsRabbitPayload := models.GetAccountDetails{
+		XCorrelationID: accountID,
+		AccountID:      accountID,
+	}
+
+	byteArr, err := json.Marshal(getAccDetailsRabbitPayload)
+	if err != nil {
+		responseController(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = handler.RMQEventsService.PublishMessage(byteArr)
+	if err != nil {
+		responseController(w, http.StatusInternalServerError, "Fail to send data to RMQ producer")
+		return
+	}
+
+	// accDetails, err := handler.DatabaseService.GetAccountDetails(accountID)
+
+	// if err != nil {
+	// 	responseController(w, http.StatusInternalServerError, "Error occured while fetching the bank details")
 	// 	return
 	// }
 
+	// fmt.Println(accDetails)
+
+	partialResponse := map[string]string{
+		"trackingURL": "/account/getaccountdetails/asyncresponse/" + accountID,
+	}
+
+	responseController(w, http.StatusPartialContent, partialResponse)
+}
+
+func (handler *BankAndAccountHandler) GetAccountDetailsResponse(w http.ResponseWriter, r *http.Request) {
+	params := mux.Vars(r)
+	correlationID := params["uuid"]
+
+	accDetails, err := handler.Redis.ReadKey(correlationID)
 	if err != nil {
-		responseController(w, http.StatusInternalServerError, "Error occured while fetching the bank details")
+		responseController(w, http.StatusPartialContent, "response is in progress")
 		return
 	}
 

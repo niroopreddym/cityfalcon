@@ -12,18 +12,28 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/niroopreddym/cityfalcon/pkg/database"
 	"github.com/niroopreddym/cityfalcon/pkg/models"
+	"github.com/niroopreddym/cityfalcon/pkg/rabbitmq"
 	"github.com/niroopreddym/cityfalcon/pkg/services"
 )
 
 // BankAndAccountHandler is the class implementation for CompositeIface Interface
 type BankAndAccountHandler struct {
-	DatabaseService services.ISQLService
+	RMQEventsService *rabbitmq.RabbitEvents
+	DatabaseService  services.ISQLService
+	Redis            *services.RedisService
 }
 
 // NewBankAndAccountsHandlerInstance instantiates the struct
 func NewBankAndAccountsHandlerInstance() CompositeIface {
+	rabbitConnection, err := rabbitmq.NewConnection()
+	if err != nil {
+		fmt.Println(err)
+	}
+
 	return &BankAndAccountHandler{
-		DatabaseService: services.NewDatabaseServicesInstance(),
+		RMQEventsService: rabbitConnection,
+		DatabaseService:  services.NewDatabaseServicesInstance(),
+		Redis:            services.NewRedisService(),
 	}
 }
 

@@ -38,6 +38,7 @@ func main() {
 	router.Handle("/account", http.HandlerFunc(handler.CreateAccount)).Methods("POST")
 	//the below endpoint is long running process
 	router.Handle("/account/{uuid}", http.HandlerFunc(handler.GetAccountDetails)).Methods("GET")
+	router.Handle("/account/getaccountdetails/asyncresponse/{uuid}", http.HandlerFunc(handler.GetAccountDetailsResponse)).Methods("GET")
 
 	// //-------------------------prometheous endpoints--------------------
 	// promMiddleware := middleware.PrometheusMiddleware

@@ -15,6 +15,7 @@ type BankHandlerIface interface {
 type AccountHandlerIface interface {
 	CreateAccount(w http.ResponseWriter, r *http.Request)
 	GetAccountDetails(w http.ResponseWriter, r *http.Request)
+	GetAccountDetailsResponse(w http.ResponseWriter, r *http.Request)
 }
 
 //CompositeIface achieves interface composition
