@@ -2,12 +2,15 @@ package database
 
 import (
 	"context"
+	"errors"
 	"log"
 	"os"
 
 	"github.com/jackc/pgconn"
 	"github.com/jackc/pgx/v4"
 )
+
+var NoRowError error = errors.New("No Row returned")
 
 var (
 	// DB : for the database at the global space
@@ -18,7 +21,7 @@ var (
 	WriterConnectionString string
 )
 
-//DBHandler provides the class implementation for DbIface interface
+// DBHandler provides the class implementation for DbIface interface
 type DBHandler struct {
 	DatabaseService DbIface
 }
@@ -76,7 +79,7 @@ func (dbService DBHandler) CreateConnection(connectionString string) (*pgx.Conn,
 	return DB, nil
 }
 
-//DbClose : Close the DB connectivity.
+// DbClose : Close the DB connectivity.
 func (dbService DBHandler) DbClose() {
 	err := DB.Close(context.Background())
 	if err != nil {
@@ -84,7 +87,7 @@ func (dbService DBHandler) DbClose() {
 	}
 }
 
-//TxQuery : To execute a query and fetch rows. This will typically perform an insert & select (or) a plain select.
+// TxQuery : To execute a query and fetch rows. This will typically perform an insert & select (or) a plain select.
 func (dbService DBHandler) TxQuery(tx pgx.Tx, query string) (pgx.Rows, error) {
 	rows, err := tx.Query(context.Background(), query)
 	if err != nil {
@@ -97,7 +100,7 @@ func (dbService DBHandler) TxQuery(tx pgx.Tx, query string) (pgx.Rows, error) {
 	return rows, nil
 }
 
-//TxBegin : To begin transaction.
+// TxBegin : To begin transaction.
 func (dbService DBHandler) TxBegin() (pgx.Tx, error) {
 	var err error
 	DB, err = dbService.CreateConnection(WriterConnectionString)
@@ -109,7 +112,7 @@ func (dbService DBHandler) TxBegin() (pgx.Tx, error) {
 	return tx, err
 }
 
-//TxExecuteStmt : Executes the Query. Usually an INSERT/UPDATE.
+// TxExecuteStmt : Executes the Query. Usually an INSERT/UPDATE.
 func (dbService DBHandler) TxExecuteStmt(tx pgx.Tx, query string, args ...interface{}) (pgconn.CommandTag, error) {
 	res, err := tx.Exec(context.Background(), query, args...)
 	if err != nil {

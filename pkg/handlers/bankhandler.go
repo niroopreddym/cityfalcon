@@ -3,12 +3,14 @@ package handlers
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"strings"
 
 	"github.com/gorilla/mux"
+	"github.com/niroopreddym/cityfalcon/pkg/database"
 	"github.com/niroopreddym/cityfalcon/pkg/models"
 	"github.com/niroopreddym/cityfalcon/pkg/services"
 )
@@ -78,9 +80,6 @@ func (handler *BankAndAccountHandler) GetAllBanks(w http.ResponseWriter, r *http
 	responseController(w, http.StatusOK, lstBanks)
 }
 
-// DeleteBank deletes a bank from DB
-func (handler *BankAndAccountHandler) DeleteBank(w http.ResponseWriter, r *http.Request) {}
-
 // GetBankDetails gets the bank details
 func (handler *BankAndAccountHandler) GetBankDetails(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
@@ -102,6 +101,11 @@ func (handler *BankAndAccountHandler) UpdateBankDetails(w http.ResponseWriter, r
 
 	_, err := handler.DatabaseService.GetBankDetails(bankUUID)
 	if err != nil {
+		if err == database.NoRowError {
+			responseController(w, http.StatusBadRequest, fmt.Sprintf("bank with bank_uuid %v is not found", bankUUID))
+			return
+		}
+
 		responseController(w, http.StatusInternalServerError, err.Error())
 		return
 	}
@@ -146,7 +150,18 @@ func (handler *BankAndAccountHandler) RemoveBank(w http.ResponseWriter, r *http.
 	params := mux.Vars(r)
 	bankUUID := params["id"]
 
-	err := handler.DatabaseService.DeleteBank(bankUUID)
+	_, err := handler.DatabaseService.GetBankDetails(bankUUID)
+	if err != nil {
+		if err == database.NoRowError {
+			responseController(w, http.StatusBadRequest, fmt.Sprintf("bank with bank_uuid %v is not found", bankUUID))
+			return
+		}
+
+		responseController(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+
+	err = handler.DatabaseService.DeleteBank(bankUUID)
 	if err != nil {
 		responseController(w, http.StatusInternalServerError, err.Error())
 	}

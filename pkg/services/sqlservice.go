@@ -115,6 +115,10 @@ func (service *DatabaseService) GetBankDetails(uuid string) (*models.Bank, error
 
 	}
 
+	if txResult.BankUUID == "" {
+		return nil, database.NoRowError
+	}
+
 	if err = service.DatabaseService.TxComplete(tx); err != nil {
 		return nil, err
 	}
