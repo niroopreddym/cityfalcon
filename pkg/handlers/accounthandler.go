@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -71,20 +72,20 @@ func (handler *BankAndAccountHandler) GetAccountDetails(w http.ResponseWriter, r
 		return
 	}
 
+	//read thorugh cache type implementation
+	accDetails, err := handler.Redis.ReadKey(accountID)
+	if err != nil {
+		fmt.Println(err)
+	} else {
+		responseController(w, http.StatusOK, accDetails)
+		return
+	}
+
 	err = handler.RMQEventsService.PublishMessage(byteArr)
 	if err != nil {
 		responseController(w, http.StatusInternalServerError, "Fail to send data to RMQ producer")
 		return
 	}
-
-	// accDetails, err := handler.DatabaseService.GetAccountDetails(accountID)
-
-	// if err != nil {
-	// 	responseController(w, http.StatusInternalServerError, "Error occured while fetching the bank details")
-	// 	return
-	// }
-
-	// fmt.Println(accDetails)
 
 	partialResponse := map[string]string{
 		"trackingURL": "/account/getaccountdetails/asyncresponse/" + accountID,
