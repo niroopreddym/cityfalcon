@@ -31,13 +31,13 @@ func main() {
 	fmt.Println("started listening on port : ", 9295)
 	router.Handle("/bank", http.HandlerFunc(handler.CreateBank)).Methods("POST")
 	router.Handle("/bank", http.HandlerFunc(handler.GetAllBanks)).Methods("GET")
-	router.Handle("/bank/{id}", http.HandlerFunc(handler.GetBankDetails)).Methods("GET")
-	router.Handle("/bank/{id}", http.HandlerFunc(handler.UpdateBankDetails)).Methods("PUT")
-	router.Handle("/bank/{id}", http.HandlerFunc(handler.RemoveBank)).Methods("DELETE")
+	router.Handle("/bank/{uuid}", http.HandlerFunc(handler.GetBankDetails)).Methods("GET")
+	router.Handle("/bank/{uuid}", http.HandlerFunc(handler.UpdateBankDetails)).Methods("PUT")
+	router.Handle("/bank/{uuid}", http.HandlerFunc(handler.RemoveBank)).Methods("DELETE")
 
 	router.Handle("/account", http.HandlerFunc(handler.CreateAccount)).Methods("POST")
 	//the below endpoint is long running process
-	router.Handle("/account/{id}", http.HandlerFunc(handler.GetAccountDetails)).Methods("GET")
+	router.Handle("/account/{uuid}", http.HandlerFunc(handler.GetAccountDetails)).Methods("GET")
 
 	// //-------------------------prometheous endpoints--------------------
 	// promMiddleware := middleware.PrometheusMiddleware

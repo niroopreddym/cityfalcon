@@ -83,7 +83,7 @@ func (handler *BankAndAccountHandler) GetAllBanks(w http.ResponseWriter, r *http
 // GetBankDetails gets the bank details
 func (handler *BankAndAccountHandler) GetBankDetails(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	bankUUID := params["id"]
+	bankUUID := params["uuid"]
 
 	bankDetails, err := handler.DatabaseService.GetBankDetails(bankUUID)
 	if err != nil {
@@ -97,7 +97,7 @@ func (handler *BankAndAccountHandler) GetBankDetails(w http.ResponseWriter, r *h
 // UpdateBankDetails updates the bank details
 func (handler *BankAndAccountHandler) UpdateBankDetails(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	bankUUID := params["id"]
+	bankUUID := params["uuid"]
 
 	_, err := handler.DatabaseService.GetBankDetails(bankUUID)
 	if err != nil {
@@ -148,7 +148,7 @@ func (handler *BankAndAccountHandler) UpdateBankDetails(w http.ResponseWriter, r
 // RemoveBank deletes the bank record
 func (handler *BankAndAccountHandler) RemoveBank(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	bankUUID := params["id"]
+	bankUUID := params["uuid"]
 
 	_, err := handler.DatabaseService.GetBankDetails(bankUUID)
 	if err != nil {

@@ -11,6 +11,7 @@ CREATE TABLE Bank (
 
 CREATE TABLE Account (
     account_id int PRIMARY KEY GENERATED ALWAYS AS IDENTITY,
+    account_uuid uuid,
     account_holder_name varchar(50),
     bank_id int,
     first_name varchar(50),

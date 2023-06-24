@@ -2,10 +2,11 @@ package models
 
 //Account ...
 type Account struct {
-	AccountID         *int   `json:"accountid"`
-	AccountHolderName string `json:"accountholdername"`
-	BankUUID          string `json:"bankguid"`
-	FirstName         string `json:"firstname"`
-	LastName          string `json:"lastname"`
-	Balance           string `json:"balance"`
+	AccountID         int     `json:"accountid"`
+	AccountUUID       string  `json:"accountuuid"`
+	AccountHolderName string  `json:"accountholdername"`
+	BankId            *int    `json:"bankid"`
+	FirstName         string  `json:"firstname"`
+	LastName          string  `json:"lastname"`
+	Balance           float64 `json:"balance"`
 }

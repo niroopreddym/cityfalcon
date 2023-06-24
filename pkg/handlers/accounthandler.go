@@ -5,16 +5,14 @@ import (
 	"io/ioutil"
 	"log"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/gorilla/mux"
 	"github.com/niroopreddym/cityfalcon/pkg/models"
 )
 
 func postAccountRequestBodyInitialValidation(accountDetails models.Account, errorMessages *[]string) {
-	if strings.TrimSpace(accountDetails.BankUUID) == "" {
-		errorMessage := "Attribute Missing: BankUUID in the request body"
+	if accountDetails.BankId == nil {
+		errorMessage := "Attribute Missing: BankId in the request body"
 		*errorMessages = append(*errorMessages, errorMessage)
 	}
 }
@@ -53,21 +51,21 @@ func (handler *BankAndAccountHandler) CreateAccount(w http.ResponseWriter, r *ht
 	}
 
 	responseController(w, http.StatusOK, map[string]string{
-		"AccountID": *uniqueID,
+		"AccountUUID": *uniqueID,
 	})
 }
 
 // GetAccountDetails gets account details
 func (handler *BankAndAccountHandler) GetAccountDetails(w http.ResponseWriter, r *http.Request) {
 	params := mux.Vars(r)
-	accountID := params["id"]
+	accountID := params["uuid"]
 
-	time.Sleep(5 * time.Second)
+	// time.Sleep(5 * time.Second)
 	accDetails, err := handler.DatabaseService.GetAccountDetails(accountID)
-	if accDetails.AccountID == nil {
-		responseController(w, http.StatusNotFound, "Account Not Found")
-		return
-	}
+	// if accDetails.a == nil {
+	// 	responseController(w, http.StatusNotFound, "Account Not Found")
+	// 	return
+	// }
 
 	if err != nil {
 		responseController(w, http.StatusInternalServerError, "Error occured while fetching the bank details")

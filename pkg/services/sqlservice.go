@@ -1,9 +1,10 @@
 package services
 
 import (
-	"errors"
 	"fmt"
 	"log"
+	"math"
+	"strconv"
 
 	"github.com/google/uuid"
 	"github.com/niroopreddym/cityfalcon/pkg/database"
@@ -66,6 +67,7 @@ func (service *DatabaseService) ListAllBanks() ([]*models.Bank, error) {
 		}
 
 		bank := &models.Bank{
+			BankID:     id,
 			BankUUID:   bankUUID,
 			BankName:   bankName,
 			IFSCCode:   ifscCode,
@@ -107,6 +109,7 @@ func (service *DatabaseService) GetBankDetails(uuid string) (*models.Bank, error
 		}
 
 		txResult = &models.Bank{
+			BankID:     id,
 			BankUUID:   bankUUID,
 			BankName:   bankName,
 			IFSCCode:   ifscCode,
@@ -171,13 +174,15 @@ func (service *DatabaseService) PostAccountDetails(accountDetails *models.Accoun
 	defer service.DatabaseService.DbClose()
 
 	uuid := uuid.New().String()
-	// query := `INSERT INTO Account (bank_name, branch_name, account_holder_name, identity_id, first_name, last_name, acc_holder_addr) VALUES ($1, $2, $3, $4, $5, $6, $7)`
-	// _, err := service.DatabaseService.DbExecuteScalar(query, accountDetails.BankName, accountDetails.BranchName,
-	// 	accountDetails.AccountHolderName, uuid, accountDetails.FirstName, accountDetails.LastName, accountDetails.Address)
-	// if err != nil {
-	// 	log.Println(err)
-	// 	return nil, errors.New("internal server error")
-	// }
+
+	query := `INSERT INTO Account (account_uuid, account_holder_name, bank_id, first_name, last_name, balance) VALUES ($1, $2, $3, $4, $5, $6)`
+	_, err := service.DatabaseService.DbExecuteScalar(query, uuid, accountDetails.AccountHolderName, accountDetails.BankId,
+		accountDetails.FirstName, accountDetails.LastName, fmt.Sprintf("%v", accountDetails.Balance))
+
+	if err != nil {
+		log.Println(err)
+		return nil, err
+	}
 
 	return &uuid, nil
 }
@@ -185,35 +190,42 @@ func (service *DatabaseService) PostAccountDetails(accountDetails *models.Accoun
 // GetAccountDetails fetches acc details
 func (service *DatabaseService) GetAccountDetails(id string) (*models.Account, error) {
 	defer service.DatabaseService.DbClose()
-	query := "select * from Account where account_id=" + id
+	query := fmt.Sprintf("select * from Account where account_uuid= '%v'", id)
 	tx, err := service.DatabaseService.TxBegin()
 	rowsAffected, err := service.DatabaseService.TxQuery(tx, query)
 	if err != nil {
 		log.Println(err)
-		return nil, errors.New("internal server error")
+		return nil, err
 	}
 
 	txResult := &models.Account{}
 	for rowsAffected.Next() {
 		var id int
-		var accHolderName string
-		var bankName string
-		var branchName string
-		var identity string
+		var accountUUID string
+		var accountHolderName string
+		var bankID int
 		var firstName string
 		var lastName string
-		var address string
+		var balance string
 
-		if err := rowsAffected.Scan(&id, &bankName, &branchName, &accHolderName, &identity, &firstName, &lastName, &address); err != nil {
+		if err := rowsAffected.Scan(&id, &accountUUID, &accountHolderName, &bankID, &firstName, &lastName, &balance); err != nil {
 			log.Println(err)
-			log.Fatal(err)
+			return nil, err
+		}
+
+		fmtBalance, err := strconv.ParseFloat(balance, 32)
+		if err != nil {
+			fmt.Println(err.Error())
 		}
 
 		txResult = &models.Account{
-			AccountID:         &id,
-			AccountHolderName: accHolderName,
+			AccountID:         id,
+			AccountUUID:       accountUUID,
+			AccountHolderName: accountHolderName,
+			BankId:            &bankID,
 			FirstName:         firstName,
 			LastName:          lastName,
+			Balance:           math.Ceil(fmtBalance*100) / 100,
 		}
 	}
 
