@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/niroopreddym/cityfalcon/pkg/database"
 	"github.com/niroopreddym/cityfalcon/pkg/models"
 	"github.com/niroopreddym/cityfalcon/pkg/services"
 	"github.com/streadway/amqp"
@@ -17,6 +18,7 @@ type RabbitEvents struct {
 	Queue           *amqp.Queue
 	DatabaseService services.ISQLService
 	RedisService    *services.RedisService
+	errorChan       chan error
 }
 
 func NewConnection() (*RabbitEvents, error) {
@@ -95,15 +97,16 @@ func (r *RabbitEvents) PublishMessage(messageBody []byte) error {
 }
 
 func (r *RabbitEvents) ConsumeMessage(stopChan chan bool, errorChan chan error) {
+	r.errorChan = errorChan
 	// declaring consumer with its properties over channel opened
 	msgs, err := r.Channel.Consume(
 		r.Queue.Name, // queue
 		"",           // consumer
-		true,         // auto ack
+		false,        // auto ack
 		false,        // exclusive
 		false,        // no local
 		false,        // no wait
-		nil,          //args
+		nil,          // args
 	)
 
 	if err != nil {
@@ -116,25 +119,45 @@ func (r *RabbitEvents) ConsumeMessage(stopChan chan bool, errorChan chan error) 
 			getAccDetailsModal := models.GetAccountDetails{}
 			err := json.Unmarshal(msg.Body, &getAccDetailsModal)
 			if err != nil {
+				r.ackRMQMessage(msg.DeliveryTag)
 				errorChan <- err
 			}
 
 			accDetails, err := r.DatabaseService.GetAccountDetails(getAccDetailsModal.XCorrelationID)
-			time.Sleep(10 * time.Second)
+			time.Sleep(5 * time.Second)
 
 			if err != nil {
-				r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, err.Error())
-				errorChan <- errors.New("Error occured while fetching the bank details")
+				if err == database.NoRowError {
+					r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, fmt.Sprintf("bank with bank_uuid %v is not found", getAccDetailsModal.XCorrelationID))
+					r.ackRMQMessage(msg.DeliveryTag)
+					return
+				}
+
+				r.ackRMQMessage(msg.DeliveryTag)
+				errorChan <- err
+				return
 			}
 
 			err = r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, fmt.Sprintf("%v", *accDetails.Balance))
 			if err != nil {
+				r.ackRMQMessage(msg.DeliveryTag)
 				errorChan <- errors.New("Error occured while fetching the bank details")
 			}
+
+			//positive ack
+			fmt.Println("message consumed: ", string(msg.Body))
+			r.ackRMQMessage(msg.DeliveryTag)
 		}
 	}()
 
 	fmt.Println("Waiting for messages...")
 
 	<-stopChan
+}
+
+func (r *RabbitEvents) ackRMQMessage(deliveryTag uint64) {
+	err := r.Channel.Ack(deliveryTag, false)
+	if err != nil {
+		r.errorChan <- errors.New(fmt.Sprintf("Error occured while ack-ing delivery tag: %v", err.Error()))
+	}
 }

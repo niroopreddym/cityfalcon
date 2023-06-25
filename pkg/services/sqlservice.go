@@ -230,6 +230,10 @@ func (service *DatabaseService) GetAccountDetails(id string) (*models.Account, e
 		}
 	}
 
+	if txResult.AccountUUID == "" {
+		return nil, database.NoRowError
+	}
+
 	if err = service.DatabaseService.TxComplete(tx); err != nil {
 		return nil, err
 	}
