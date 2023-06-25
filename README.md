@@ -127,3 +127,13 @@ response-payload:
 Used the atomic metrics collection middleware inside the gorilla-mux router map.
 
 ![App Screenshot](https://raw.githubusercontent.com/niroopreddym/images/master/graphana.jpg)
+
+
+## Starting the solution
+
+Use the makefile and run the following commands.
+
+  1. make build -- build the excutables/binaries depending on OS am using Windows.
+  2. make lint -- lint the code for any issues
+  3. make run -- to start the backgroundworker and infra.
+  4. make start-api(on another console) -- to start the api
