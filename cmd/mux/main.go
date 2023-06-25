@@ -24,17 +24,17 @@ func main() {
 	router := mux.NewRouter()
 	handler := handlers.NewBankAndAccountsHandlerInstance()
 	fmt.Println("started listening on port : ", 9295)
-	router.Handle("/bank", http.HandlerFunc(handler.CreateBank)).Methods("POST")
-	router.Handle("/bank", http.HandlerFunc(handler.GetAllBanks)).Methods("GET")
-	router.Handle("/bank/{uuid}", http.HandlerFunc(handler.GetBankDetails)).Methods("GET")
-	router.Handle("/bank/{uuid}", http.HandlerFunc(handler.UpdateBankDetails)).Methods("PUT")
-	router.Handle("/bank/{uuid}", http.HandlerFunc(handler.RemoveBank)).Methods("DELETE")
+	router.Handle("/api/bank", http.HandlerFunc(handler.CreateBank)).Methods("POST")
+	router.Handle("/api/bank", http.HandlerFunc(handler.GetAllBanks)).Methods("GET")
+	router.Handle("/api/bank/{uuid}", http.HandlerFunc(handler.GetBankDetails)).Methods("GET")
+	router.Handle("/api/bank/{uuid}", http.HandlerFunc(handler.UpdateBankDetails)).Methods("PUT")
+	router.Handle("/api/bank/{uuid}", http.HandlerFunc(handler.RemoveBank)).Methods("DELETE")
 
-	router.Handle("/account", http.HandlerFunc(handler.CreateAccount)).Methods("POST")
+	router.Handle("/api/account", http.HandlerFunc(handler.CreateAccount)).Methods("POST")
 	//the below endpoint is long running process
-	router.Handle("/account/{uuid}", http.HandlerFunc(handler.GetAccountDetails)).Methods("GET")
-	router.Handle("/account/getaccountdetails/asyncresponse/{uuid}", http.HandlerFunc(handler.GetAccountDetailsResponse)).Methods("GET")
-	router.Handle("/account/{uuid}", http.HandlerFunc(handler.UpdateAccountDetails)).Methods("PUT")
+	router.Handle("/api/account/{uuid}", http.HandlerFunc(handler.GetAccountDetails)).Methods("GET")
+	router.Handle("/api/account/getaccountdetails/asyncresponse/{uuid}", http.HandlerFunc(handler.GetAccountDetailsResponse)).Methods("GET")
+	router.Handle("/api/account/{uuid}", http.HandlerFunc(handler.UpdateAccountDetails)).Methods("PUT")
 
 	//-------------------------prometheous endpoints--------------------
 	promMiddleware := middleware.PrometheusMiddleware
