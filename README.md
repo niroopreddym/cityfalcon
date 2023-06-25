@@ -9,12 +9,66 @@ Caching frequently used get calls using REDIS.
 
 POSTGRES is used as the SQL Database.
 
-
 ## Long-Running Task Architecture
 
 ![App Screenshot](https://raw.githubusercontent.com/niroopreddym/images/38c634ca50b4eb0f619db361266bf746f853a80b/longrunningtaskevented.drawio.svg)
 
-### API Reference
+## Booting the project using Docker-Compose
+
+### understanding bridge-network for metric collections to prometheus in Docker-Compose
+```Note
+The Prometheus and Graphana containers have to be bridge connected so assign a common network to both of them in the compose file. Like below
+
+prometheus:
+    image: niroop/prom
+    build: 
+      context: ./prometheus
+      dockerfile: Dockerfile
+    ports:
+      - "9090:9090"
+    command:
+      - '--config.file=/etc/prometheus/prometheus.yml'
+      - '--storage.tsdb.path=/prometheus'
+      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
+      - '--web.console.templates=/usr/share/prometheus/consoles'
+    volumes:
+      - ./prometheus/:/etc/prometheus/
+      - prometheus_data:/prometheus
+    networks:
+      - gateway
+  graphana:
+    image: grafana/grafana:latest
+    container_name: graphana
+    ports:
+      - "3000:3000"
+    networks:
+      - gateway
+    volumes:
+      - grafana-storage:/var/lib/grafana
+networks:
+  gateway: {}
+  
+```
+### Docker-Compose Boot Commands
+
+navigate to the infrastrcuture folder on root level
+
+```docker
+ docker-compose build
+ docker-compose up -d
+```
+
+
+### starting the RabbitMQ Consumer as background worker
+```bash
+cd cmd/Rabbit
+go run .
+```
+
+
+
+
+## API Reference
 
 #### Create a new bank
 
@@ -64,52 +118,9 @@ response-payload:
 | :-------- | :------- | :--------------------------------------------- |
 | `id`      | `string` | **Required**. UUID of account balance to fetch |
 
-## Booting the project using Docker-Compose
 
-### understanding bridge-network for metric collections to prometheus in Docker-Compose
 
-```Note
-The Prometheus and Graphana containers have to be bridge connected so assign a common network to both of them in the compose file. Like below
 
-prometheus:
-    image: niroop/prom
-    build: 
-      context: ./prometheus
-      dockerfile: Dockerfile
-    ports:
-      - "9090:9090"
-    command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
-    volumes:
-      - ./prometheus/:/etc/prometheus/
-      - prometheus_data:/prometheus
-    networks:
-      - gateway
-  graphana:
-    image: grafana/grafana:latest
-    container_name: graphana
-    ports:
-      - "3000:3000"
-    networks:
-      - gateway
-    volumes:
-      - grafana-storage:/var/lib/grafana
-networks:
-  gateway: {}
-  
-```
-
-### Docker-Compose Boot Commands
-
-navigate to the infrastrcuture folder on root level
-
-```docker
- docker-compose build
- docker-compose up -d
-```
 
 ## Monitoring solution using Prometheus and Graphana
 
