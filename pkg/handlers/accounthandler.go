@@ -87,14 +87,6 @@ func (handler *BankAndAccountHandler) GetAccountDetailsResponse(w http.ResponseW
 	//read thorugh cache type implementation
 	accDetails, err := handler.Redis.ReadKey(correlationID)
 	if err != nil {
-		fmt.Println(err)
-	} else {
-		responseController(w, http.StatusOK, accDetails)
-		return
-	}
-
-	accDetails, err = handler.Redis.ReadKey(correlationID)
-	if err != nil {
 		responseController(w, http.StatusPartialContent, "response is in progress")
 		return
 	}
@@ -107,17 +99,6 @@ func (handler *BankAndAccountHandler) UpdateAccountDetails(w http.ResponseWriter
 	params := mux.Vars(r)
 	accountUUID := params["uuid"]
 
-	_, err := handler.DatabaseService.GetAccountDetails(accountUUID)
-	if err != nil {
-		if err == database.NoRowError {
-			responseController(w, http.StatusBadRequest, fmt.Sprintf("bank with bank_uuid %v is not found", accountUUID))
-			return
-		}
-
-		responseController(w, http.StatusInternalServerError, err.Error())
-		return
-	}
-
 	requestedAccDetails := models.Account{}
 	bodyBytes, readErr := ioutil.ReadAll(r.Body)
 	if readErr != nil {
@@ -129,7 +110,7 @@ func (handler *BankAndAccountHandler) UpdateAccountDetails(w http.ResponseWriter
 	}
 
 	strBufferValue := string(bodyBytes)
-	err = json.Unmarshal([]byte(strBufferValue), &requestedAccDetails)
+	err := json.Unmarshal([]byte(strBufferValue), &requestedAccDetails)
 	if err != nil {
 		log.Println(err)
 		responseController(w, http.StatusInternalServerError, err.Error())
@@ -140,6 +121,17 @@ func (handler *BankAndAccountHandler) UpdateAccountDetails(w http.ResponseWriter
 	updateAccountRequestBodyInitialValidation(requestedAccDetails, &errorMessages)
 	if len(errorMessages) > 0 {
 		responseController(w, http.StatusBadRequest, errorMessages)
+		return
+	}
+
+	_, err = handler.DatabaseService.GetAccountDetails(accountUUID)
+	if err != nil {
+		if err == database.NoRowError {
+			responseController(w, http.StatusBadRequest, fmt.Sprintf("bank with bank_uuid %v is not found", accountUUID))
+			return
+		}
+
+		responseController(w, http.StatusInternalServerError, err.Error())
 		return
 	}
 

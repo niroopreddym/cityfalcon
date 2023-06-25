@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -32,4 +33,24 @@ func Test_GetBankDetails(t *testing.T) {
 
 	handler.GetBankDetails(response, request)
 	assert.Equal(t, response.Code, 200)
+}
+
+func Test_GetBankDetails_SQLDBcallFail_ReturnsError(t *testing.T) {
+	controller := gomock.NewController(t)
+	defer controller.Finish()
+
+	request, _ := http.NewRequest("GET", "/api/bank/{dcb50ac8-3420-49ca-9980-7986a3b6d5b8}", nil)
+	response := httptest.NewRecorder()
+
+	sqlServiceMock := mock.NewMockISQLService(controller)
+	sqlServiceMock.EXPECT().GetBankDetails(gomock.Any()).AnyTimes().Return(nil, errors.New("error"))
+
+	handler := BankAndAccountHandler{
+		RMQEventsService: nil,
+		DatabaseService:  sqlServiceMock,
+		Redis:            nil,
+	}
+
+	handler.GetBankDetails(response, request)
+	assert.Equal(t, response.Code, 500)
 }

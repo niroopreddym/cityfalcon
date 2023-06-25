@@ -18,9 +18,9 @@ import (
 
 // BankAndAccountHandler is the class implementation for CompositeIface Interface
 type BankAndAccountHandler struct {
-	RMQEventsService *rabbitmq.RabbitEvents
+	RMQEventsService rabbitmq.IRMQService
 	DatabaseService  services.ISQLService
-	Redis            *services.RedisService
+	Redis            services.IRedisService
 }
 
 // NewBankAndAccountsHandlerInstance instantiates the struct
@@ -174,6 +174,7 @@ func (handler *BankAndAccountHandler) RemoveBank(w http.ResponseWriter, r *http.
 	err = handler.DatabaseService.DeleteBank(bankUUID)
 	if err != nil {
 		responseController(w, http.StatusInternalServerError, err.Error())
+		return
 	}
 
 	responseController(w, http.StatusNoContent, "Successfully Deleted")

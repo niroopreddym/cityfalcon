@@ -17,11 +17,11 @@ type RabbitEvents struct {
 	Channel         *amqp.Channel
 	Queue           *amqp.Queue
 	DatabaseService services.ISQLService
-	RedisService    *services.RedisService
+	RedisService    services.IRedisService
 	errorChan       chan error
 }
 
-func NewConnection() (*RabbitEvents, error) {
+func NewConnection() (IRMQService, error) {
 	fmt.Println("RabbitMQ in Golang: Getting started tutorial")
 
 	connection, err := amqp.Dial("amqp://guest:guest@localhost:5672/")

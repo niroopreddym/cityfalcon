@@ -12,7 +12,7 @@ type RedisService struct {
 	Context context.Context
 }
 
-func NewRedisService() *RedisService {
+func NewRedisService() IRedisService {
 	client := redis.NewClient(&redis.Options{
 		Addr:     "localhost:6379",
 		Password: "",
