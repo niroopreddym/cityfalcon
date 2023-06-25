@@ -13,20 +13,6 @@ import (
 	"github.com/niroopreddym/cityfalcon/pkg/models"
 )
 
-func postAccountRequestBodyInitialValidation(accountDetails models.Account, errorMessages *[]string) {
-	if accountDetails.BankId == nil {
-		errorMessage := "Attribute Missing: BankId in the request body"
-		*errorMessages = append(*errorMessages, errorMessage)
-	}
-}
-
-func updateAccountRequestBodyInitialValidation(accountDetails models.Account, errorMessages *[]string) {
-	if accountDetails.Balance == nil {
-		errorMessage := "Attribute Missing: Balance in the request body"
-		*errorMessages = append(*errorMessages, errorMessage)
-	}
-}
-
 //---------------------------------Account related endpoints-------------------------------------------------
 
 // CreateAccount creates a account in bank
@@ -171,4 +157,18 @@ func (handler *BankAndAccountHandler) UpdateAccountDetails(w http.ResponseWriter
 	}
 
 	responseController(w, http.StatusNoContent, "Updated Sucessfully")
+}
+
+func postAccountRequestBodyInitialValidation(accountDetails models.Account, errorMessages *[]string) {
+	if accountDetails.BankId == nil {
+		errorMessage := "Attribute Missing: BankId in the request body"
+		*errorMessages = append(*errorMessages, errorMessage)
+	}
+}
+
+func updateAccountRequestBodyInitialValidation(accountDetails models.Account, errorMessages *[]string) {
+	if accountDetails.Balance == nil {
+		errorMessage := "Attribute Missing: Balance in the request body"
+		*errorMessages = append(*errorMessages, errorMessage)
+	}
 }
