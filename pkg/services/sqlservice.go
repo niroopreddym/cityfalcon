@@ -177,7 +177,7 @@ func (service *DatabaseService) PostAccountDetails(accountDetails *models.Accoun
 
 	query := `INSERT INTO Account (account_uuid, account_holder_name, bank_id, first_name, last_name, balance) VALUES ($1, $2, $3, $4, $5, $6)`
 	_, err := service.DatabaseService.DbExecuteScalar(query, uuid, accountDetails.AccountHolderName, accountDetails.BankId,
-		accountDetails.FirstName, accountDetails.LastName, fmt.Sprintf("%v", accountDetails.Balance))
+		accountDetails.FirstName, accountDetails.LastName, fmt.Sprintf("%v", *accountDetails.Balance))
 
 	if err != nil {
 		log.Println(err)
@@ -218,6 +218,7 @@ func (service *DatabaseService) GetAccountDetails(id string) (*models.Account, e
 			fmt.Println(err.Error())
 		}
 
+		roundedOffBalance := math.Ceil(fmtBalance*100) / 100
 		txResult = &models.Account{
 			AccountID:         id,
 			AccountUUID:       accountUUID,
@@ -225,7 +226,7 @@ func (service *DatabaseService) GetAccountDetails(id string) (*models.Account, e
 			BankId:            &bankID,
 			FirstName:         firstName,
 			LastName:          lastName,
-			Balance:           math.Ceil(fmtBalance*100) / 100,
+			Balance:           &roundedOffBalance,
 		}
 	}
 
@@ -234,4 +235,24 @@ func (service *DatabaseService) GetAccountDetails(id string) (*models.Account, e
 	}
 
 	return txResult, nil
+}
+
+// UpdateAccountDetails updates the account balance details
+func (service *DatabaseService) UpdateAccountDetails(id string, accDetails models.Account) error {
+	defer service.DatabaseService.DbClose()
+	query := fmt.Sprintf("update Account set balance = '%v' where account_uuid='%v'", fmt.Sprintf("%v", *accDetails.Balance), id)
+
+	tx, err := service.DatabaseService.TxBegin()
+	_, err = service.DatabaseService.TxExecuteStmt(tx, query)
+
+	if err != nil {
+		log.Println(err)
+		return err
+	}
+
+	if err = service.DatabaseService.TxComplete(tx); err != nil {
+		return err
+	}
+
+	return nil
 }

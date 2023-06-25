@@ -127,7 +127,7 @@ func (r *RabbitEvents) ConsumeMessage(stopChan chan bool, errorChan chan error) 
 				errorChan <- errors.New("Error occured while fetching the bank details")
 			}
 
-			err = r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, fmt.Sprintf("%v", accDetails.Balance))
+			err = r.RedisService.AddKey(getAccDetailsModal.XCorrelationID, fmt.Sprintf("%v", *accDetails.Balance))
 			if err != nil {
 				errorChan <- errors.New("Error occured while fetching the bank details")
 			}
